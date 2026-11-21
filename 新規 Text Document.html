@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ビンゴ抽選機</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .display-box {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 12px;
+            padding: 40px 20px;
+            margin-bottom: 25px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .number-display {
+            font-size: 6rem;
+            font-weight: bold;
+            color: #ffffff;
+            height: 120px;
+            line-height: 120px;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-draw {
+            background-color: #ff4757;
+            color: white;
+            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
+        }
+
+        .btn-draw:hover:not(:disabled) {
+            background-color: #ff6b81;
+            transform: translateY(-2px);
+        }
+
+        .btn-draw:disabled {
+            background-color: #a4b0be;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-reset {
+            background-color: #747d8c;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background-color: #57606f;
+        }
+
+        .history-section {
+            text-align: left;
+            border-top: 2px solid #eccc68;
+            padding-top: 20px;
+        }
+
+        .history-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 5px;
+        }
+
+        .history-item {
+            background-color: #f1f2f6;
+            border: 1px solid #dfe4ea;
+            border-radius: 6px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #2f3542;
+        }
+
+        .history-item.latest {
+            background-color: #ff4757;
+            color: white;
+            border-color: #ff4757;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>BINGO 抽選機</h1>
+
+    <div class="display-box">
+        <div id="display" class="number-display">--</div>
+    </div>
+
+    <div class="controls">
+        <button id="drawBtn" class="btn-draw" onclick="drawNumber()">数字を引く</button>
+        <button class="btn-reset" onclick="resetBingo()">リセット</button>
+    </div>
+
+    <div class="history-section">
+        <div class="history-title">
+            <span>出た数字一覧</span>
+            <span id="countDisplay">0 / 75</span>
+        </div>
+        <div id="historyGrid" class="history-grid"></div>
+    </div>
+</div>
+
+<script>
+    const MAX_NUMBER = 75;
+    let availableNumbers = [];
+    let drawnNumbers = [];
+    let isSpinning = false;
+
+    function init() {
+        availableNumbers = Array.from({ length: MAX_NUMBER }, (_, i) => i + 1);
+        drawnNumbers = [];
+        document.getElementById('display').innerText = '--';
+        document.getElementById('drawBtn').disabled = false;
+        updateHistory();
+    }
+
+    function drawNumber() {
+        if (isSpinning || availableNumbers.length === 0) return;
+
+        isSpinning = true;
+        const drawBtn = document.getElementById('drawBtn');
+        const display = document.getElementById('display');
+        drawBtn.disabled = true;
+
+        let spinCount = 0;
+        const spinInterval = setInterval(() => {
+            const randomTemp = Math.floor(Math.random() * MAX_NUMBER) + 1;
+            display.innerText = randomTemp;
+            spinCount++;
+
+            (spinCount > 20) && (() => {
+                clearInterval(spinInterval);
+                const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+                const selectedNumber = availableNumbers.splice(randomIndex, 1)[0];
+                drawnNumbers.unshift(selectedNumber);
+                display.innerText = selectedNumber;
+                updateHistory();
+                isSpinning = false;
+                if (availableNumbers.length > 0) {
+                    drawBtn.disabled = false;
+                } else {
+                    display.innerText = "終了";
+                }
+            })();
+        }, 50);
+    }
+
+    function updateHistory() {
+        const historyGrid = document.getElementById('historyGrid');
+        const countDisplay = document.getElementById('countDisplay');
+        historyGrid.innerHTML = '';
+        countDisplay.innerText = `${drawnNumbers.length} / ${MAX_NUMBER}`;
+        drawnNumbers.forEach((num, index) => {
+            const item = document.createElement('div');
+            item.className = 'history-item' + (index === 0 ? ' latest' : '');
+            item.innerText = num;
+            historyGrid.appendChild(item);
+        });
+    }
+
+    function resetBingo() {
+        if (confirm('最初からやり直しますか？')) {
+            init();
+        }
+    }
+
+    init();
+</script>
+
+</body>
+</html>
