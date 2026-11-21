@@ -11,10 +11,7 @@
       --git-border: #30363d;
       --git-text: #e6edf3;
       --git-muted: #8b949e;
-      --git-add-bg: rgba(46, 160, 67, 0.15);
       --git-add-text: #3fb950;
-      --git-del-bg: rgba(248, 81, 73, 0.15);
-      --git-del-text: #f85149;
       --git-branch-bg: rgba(56, 139, 253, 0.15);
       --git-branch-text: #58a6ff;
     }
@@ -127,57 +124,6 @@
       border: 1px solid var(--git-border);
       font-size: 13px;
     }
-
-    .git-commit-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .git-commit-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--git-border);
-    }
-
-    .git-commit-item:last-child {
-      border-bottom: none;
-    }
-
-    .git-hash {
-      color: var(--git-branch-text);
-      background-color: var(--git-surface);
-      border: 1px solid var(--git-border);
-      border-radius: 4px;
-      padding: 2px 6px;
-      font-size: 12px;
-    }
-
-    .git-diff-line {
-      padding: 2px 14px;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-
-    .git-diff-add {
-      background-color: var(--git-add-bg);
-      color: var(--git-add-text);
-    }
-
-    .git-diff-add::before {
-      content: "+ ";
-    }
-
-    .git-diff-del {
-      background-color: var(--git-del-bg);
-      color: var(--git-del-text);
-    }
-
-    .git-diff-del::before {
-      content: "- ";
-    }
   </style>
 </head>
 <body>
@@ -199,3 +145,53 @@
       <div id="history-list" class="history-list"></div>
     </div>
   </div>
+
+  <script>
+    const MAX_NUMBER = 75;
+    let pool = [];
+    let history = [];
+
+    const currentNumberEl = document.getElementById("current-number");
+    const remainLabelEl = document.getElementById("remain-label");
+    const historyListEl = document.getElementById("history-list");
+    const drawBtn = document.getElementById("draw-btn");
+    const resetBtn = document.getElementById("reset-btn");
+
+    function initGame() {
+      pool = Array.from({ length: MAX_NUMBER }, (_, i) => i + 1);
+      history = [];
+      currentNumberEl.textContent = "--";
+      drawBtn.disabled = false;
+      render();
+    }
+
+    function render() {
+      remainLabelEl.textContent = `残り: ${pool.length} / ${MAX_NUMBER}`;
+      historyListEl.innerHTML = "";
+      history.forEach((num) => {
+        const badge = document.createElement("span");
+        badge.className = "history-badge";
+        badge.textContent = num;
+        historyListEl.appendChild(badge);
+      });
+    }
+
+    drawBtn.addEventListener("click", () => {
+      if (pool.length === 0) return;
+      const idx = Math.floor(Math.random() * pool.length);
+      const [picked] = pool.splice(idx, 1);
+      history.unshift(picked);
+      currentNumberEl.textContent = picked;
+      if (pool.length === 0) {
+        drawBtn.disabled = true;
+      }
+      render();
+    });
+
+    resetBtn.addEventListener("click", initGame);
+
+    initGame();
+  </script>
+
+</body>
+</html>
