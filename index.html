@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Git コミット・差分ビュー</title>
+  <title>Git風 ビンゴ抽選機</title>
   <style>
-    /* Git コミットログ・差分ビュー用スタイル */
     :root {
       --git-bg: #0d1117;
       --git-surface: #161b22;
@@ -59,6 +58,74 @@
       color: var(--git-branch-text);
       font-size: 12px;
       font-weight: 600;
+    }
+
+    .bingo-body {
+      padding: 20px;
+      text-align: center;
+    }
+
+    .current-number-box {
+      font-size: 64px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin: 12px 0 18px;
+      color: var(--git-add-text);
+    }
+
+    .btn-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    button {
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: 1px solid var(--git-border);
+      cursor: pointer;
+    }
+
+    .btn-draw {
+      background-color: #238636;
+      color: #ffffff;
+      border-color: rgba(240, 246, 252, 0.1);
+    }
+
+    .btn-draw:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-reset {
+      background-color: var(--git-surface);
+      color: var(--git-text);
+    }
+
+    .history-title {
+      text-align: left;
+      color: var(--git-muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .history-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .history-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      background-color: var(--git-surface);
+      border: 1px solid var(--git-border);
+      font-size: 13px;
     }
 
     .git-commit-list {
@@ -115,6 +182,24 @@
 </head>
 <body>
 
+  <!-- ビンゴ抽選機パネル -->
+  <div class="git-panel">
+    <div class="git-header">
+      <span class="git-branch">bingo-engine</span>
+      <span id="remain-label">残り: 75 / 75</span>
+    </div>
+    <div class="bingo-body">
+      <div>現在の番号</div>
+      <div id="current-number" class="current-number-box">--</div>
+      <div class="btn-row">
+        <button id="draw-btn" class="btn-draw" type="button">番号を抽選する</button>
+        <button id="reset-btn" class="btn-reset" type="button">リセット</button>
+      </div>
+      <div class="history-title">出た番号の履歴（新しい順）</div>
+      <div id="history-list" class="history-list"></div>
+    </div>
+  </div>
+
   <!-- コミット一覧パネル -->
   <div class="git-panel">
     <div class="git-header">
@@ -142,6 +227,53 @@
     <div class="git-diff-line git-diff-del">const MAX_NUMBER = 90;</div>
     <div class="git-diff-line git-diff-add">const MAX_NUMBER = 75;</div>
   </div>
+
+  <script>
+    const MAX_NUMBER = 75;
+    let pool = [];
+    let history = [];
+
+    const currentNumberEl = document.getElementById("current-number");
+    const remainLabelEl = document.getElementById("remain-label");
+    const historyListEl = document.getElementById("history-list");
+    const drawBtn = document.getElementById("draw-btn");
+    const resetBtn = document.getElementById("reset-btn");
+
+    function initGame() {
+      pool = Array.from({ length: MAX_NUMBER }, (_, i) => i + 1);
+      history = [];
+      currentNumberEl.textContent = "--";
+      drawBtn.disabled = false;
+      render();
+    }
+
+    function render() {
+      remainLabelEl.textContent = `残り: ${pool.length} / ${MAX_NUMBER}`;
+      historyListEl.innerHTML = "";
+      history.forEach((num) => {
+        const badge = document.createElement("span");
+        badge.className = "history-badge";
+        badge.textContent = num;
+        historyListEl.appendChild(badge);
+      });
+    }
+
+    drawBtn.addEventListener("click", () => {
+      if (pool.length === 0) return;
+      const idx = Math.floor(Math.random() * pool.length);
+      const [picked] = pool.splice(idx, 1);
+      history.unshift(picked);
+      currentNumberEl.textContent = picked;
+      if (pool.length === 0) {
+        drawBtn.disabled = true;
+      }
+      render();
+    });
+
+    resetBtn.addEventListener("click", initGame);
+
+    initGame();
+  </script>
 
 </body>
 </html>
